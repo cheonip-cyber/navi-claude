@@ -10,6 +10,13 @@ const nextLevelByCurrentLevel = {
   LV1: '특급 엔지니어',
 }
 const LEVEL_JOURNEY = ['LV4', 'LV3', 'LV2', 'LV1', '특급 엔지니어']
+const LEVEL_AVATAR_CONFIG = {
+  LV4: { scale: 0.72, tier: 'tier-1', sparkles: 0 },
+  LV3: { scale: 0.82, tier: 'tier-2', sparkles: 3 },
+  LV2: { scale: 0.92, tier: 'tier-3', sparkles: 5 },
+  LV1: { scale: 1, tier: 'tier-4', sparkles: 7 },
+  '특급 엔지니어': { scale: 1.16, tier: 'tier-5', sparkles: 10 },
+}
 const COMPLETED_RESULTS = ['수료', '우수']
 const APPLICATION_STORAGE_KEY = 'education-navigator-applications'
 
@@ -79,6 +86,38 @@ function ReadinessRing({ percentage }) {
       />
       <text x="28" y="32" textAnchor="middle" className="ring-label">{percentage}%</text>
     </svg>
+  )
+}
+
+function LevelAvatar({ level, employeeId }) {
+  const config = LEVEL_AVATAR_CONFIG[level] ?? LEVEL_AVATAR_CONFIG.LV4
+  const sparklePositions = [
+    [10, 18], [46, 14], [4, 46], [52, 50], [28, 4],
+    [16, 58], [40, 60], [56, 30], [2, 28], [30, 66],
+  ].slice(0, config.sparkles)
+
+  return (
+    <div className={`level-avatar ${config.tier}`} key={employeeId}>
+      <div className="level-avatar-glow" aria-hidden="true" />
+      <svg className="level-avatar-figure" viewBox="0 0 60 76" width="120" height="152" role="img" aria-label={`현재 레벨 ${level} 캐릭터`} style={{ '--figure-scale': config.scale }}>
+        {sparklePositions.map(([x, y], index) => (
+          <text key={`${x}-${y}`} x={x} y={y} className="sparkle" style={{ animationDelay: `${index * 0.18}s` }}>✦</text>
+        ))}
+        {level === '특급 엔지니어' && (
+          <polygon className="crown" points="18,20 22,10 30,17 38,10 42,20" />
+        )}
+        <ellipse className="figure-helmet" cx="30" cy="18" rx="12" ry="9" />
+        <rect className="figure-helmet-brim" x="17" y="17" width="26" height="4" rx="2" />
+        <circle className="figure-head" cx="30" cy="26" r="7" />
+        <rect className="figure-torso" x="19" y="33" width="22" height="26" rx="6" />
+        <rect className="figure-vest-stripe" x="19" y="42" width="22" height="4" />
+        <rect className="figure-arm figure-arm-left" x="10" y="35" width="8" height="20" rx="4" />
+        <rect className="figure-arm figure-arm-right" x="42" y="35" width="8" height="20" rx="4" />
+        <rect className="figure-leg figure-leg-left" x="21" y="58" width="8" height="16" rx="3" />
+        <rect className="figure-leg figure-leg-right" x="31" y="58" width="8" height="16" rx="3" />
+      </svg>
+      <p className="level-avatar-caption">{level}</p>
+    </div>
   )
 }
 
@@ -240,6 +279,7 @@ function App() {
           </article>
           <section className="level-journey" aria-label="레벨 여정">
             <p className="step-eyebrow">STEP 2 · 다음 목표</p>
+            <LevelAvatar level={result.current_level} employeeId={result.employee_id} />
             <ol className="journey-track">
               {LEVEL_JOURNEY.map((level, index) => {
                 const currentIndex = LEVEL_JOURNEY.indexOf(result.current_level)
