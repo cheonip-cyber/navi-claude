@@ -9,6 +9,7 @@ const nextLevelByCurrentLevel = {
   LV2: 'LV1',
   LV1: '특급 엔지니어',
 }
+const LEVEL_JOURNEY = ['LV4', 'LV3', 'LV2', 'LV1', '특급 엔지니어']
 const COMPLETED_RESULTS = ['수료', '우수']
 const APPLICATION_STORAGE_KEY = 'education-navigator-applications'
 
@@ -56,6 +57,29 @@ function getReadinessStatus(percentage) {
   if (percentage === 0) return '학습 시작 전'
   if (percentage === 100) return 'JQC 평가 준비 완료'
   return '학습 진행 중'
+}
+
+function ReadinessRing({ percentage }) {
+  const radius = 22
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference * (1 - percentage / 100)
+  const tone = percentage === 100 ? 'ring-ready' : percentage === 0 ? 'ring-empty' : 'ring-pending'
+
+  return (
+    <svg className={`readiness-ring ${tone}`} width="56" height="56" viewBox="0 0 56 56" role="img" aria-label={`준비도 ${percentage}%`}>
+      <circle className="ring-track" cx="28" cy="28" r={radius} />
+      <circle
+        className="ring-fill"
+        cx="28"
+        cy="28"
+        r={radius}
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        transform="rotate(-90 28 28)"
+      />
+      <text x="28" y="32" textAnchor="middle" className="ring-label">{percentage}%</text>
+    </svg>
+  )
 }
 
 function App() {
@@ -182,7 +206,9 @@ function App() {
         {result ? (
           <nav className="page-nav" aria-label="교육 네비게이터 메뉴">
             <button type="button" className={activePage === 'profile' ? 'active' : ''} onClick={() => setActivePage('profile')}>교육생 정보</button>
-            <button type="button" className={activePage === 'learning' ? 'active' : ''} onClick={() => setActivePage('learning')}>교육 준비</button>
+            <button type="button" className={activePage === 'learning' ? 'active' : ''} onClick={() => setActivePage('learning')}>
+              교육 준비{jqcsNeedingPrep.length > 0 && <span className="nav-badge">{jqcsNeedingPrep.length}</span>}
+            </button>
           </nav>
         ) : <span className="stage-label">{stageLabel}</span>}
       </header>
@@ -212,8 +238,23 @@ function App() {
               <div><dt>현재 레벨</dt><dd>{result.current_level}</dd></div>
             </dl>
           </article>
-          <section className="next-level-card" aria-label="다음 목표 레벨">
+          <section className="level-journey" aria-label="레벨 여정">
             <p className="step-eyebrow">STEP 2 · 다음 목표</p>
+            <ol className="journey-track">
+              {LEVEL_JOURNEY.map((level, index) => {
+                const currentIndex = LEVEL_JOURNEY.indexOf(result.current_level)
+                const status = index === currentIndex ? 'current' : index === currentIndex + 1 ? 'target' : index < currentIndex ? 'done' : 'upcoming'
+                return (
+                  <li key={level} className={`journey-step journey-${status}`}>
+                    <span className="journey-dot" aria-hidden="true">{status === 'done' ? '✓' : index + 1}</span>
+                    <span className="journey-label">{level}</span>
+                  </li>
+                )
+              })}
+            </ol>
+          </section>
+          <section className="next-level-card" aria-label="다음 목표 레벨">
+            <p className="step-eyebrow">다음 목표</p>
             <strong>{nextLevelByCurrentLevel[result.current_level]}</strong>
             <span>{result.current_level === 'LV1' ? '특급 엔지니어는 명칭만 표시하며, 연결된 JQC나 교육 과정은 없습니다.' : `${result.current_level} 다음 단계로 준비할 레벨입니다.`}</span>
           </section>
@@ -240,6 +281,11 @@ function App() {
               {targetJqcs.length > 0 ? (
                 <>
                   <p className="section-guide">준비도가 100%보다 낮은 JQC가 있으면 아래에서 필요한 교육을 확인하세요.</p>
+                  <div className="jqc-summary">
+                    <div><span>목표 JQC</span><strong>{targetJqcs.length}개</strong></div>
+                    <div className="jqc-summary-pending"><span>부족한 JQC</span><strong>{jqcsNeedingPrep.length}개</strong></div>
+                    <div className="jqc-summary-ready"><span>준비 완료</span><strong>{targetJqcs.length - jqcsNeedingPrep.length}개</strong></div>
+                  </div>
                   <ul className="jqc-list">
                     {targetJqcs.map((jqc) => {
                       const readiness = getReadiness(result.employee_id, jqc.jqc_id)
@@ -254,20 +300,25 @@ function App() {
                               </span>
                             )}
                           </div>
-                          <strong>{jqc.jqc_name}</strong>
-                          {readiness.percentage === null ? (
-                            <p className="readiness-empty">교육정보 없음</p>
-                          ) : (
-                            <div className="readiness">
-                              <div className="readiness-bar" role="progressbar" aria-valuenow={readiness.percentage} aria-valuemin={0} aria-valuemax={100}>
-                                <div className="readiness-bar-fill" style={{ width: `${readiness.percentage}%` }} />
-                              </div>
-                              <div className="readiness-meta">
-                                <span>{readiness.completedCount}/{readiness.totalCount} 과정 이수 · {readiness.percentage}%</span>
-                                <span className="readiness-status">{getReadinessStatus(readiness.percentage)}</span>
-                              </div>
+                          <div className="jqc-item-body">
+                            {readiness.percentage !== null && <ReadinessRing percentage={readiness.percentage} />}
+                            <div className="jqc-item-detail">
+                              <strong>{jqc.jqc_name}</strong>
+                              {readiness.percentage === null ? (
+                                <p className="readiness-empty">교육정보 없음</p>
+                              ) : (
+                                <div className="readiness">
+                                  <div className="readiness-bar" role="progressbar" aria-valuenow={readiness.percentage} aria-valuemin={0} aria-valuemax={100}>
+                                    <div className="readiness-bar-fill" style={{ width: `${readiness.percentage}%` }} />
+                                  </div>
+                                  <div className="readiness-meta">
+                                    <span>{readiness.completedCount}/{readiness.totalCount} 과정 이수</span>
+                                    <span className="readiness-status">{getReadinessStatus(readiness.percentage)}</span>
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          )}
+                          </div>
                         </li>
                       )
                     })}
@@ -304,13 +355,16 @@ function App() {
                         <span className="schedule-label">예정된 일정</span>
                         {schedules.length > 0 ? (
                           <ul className="schedule-list">
-                            {schedules.map((schedule) => {
+                            {schedules.map((schedule, scheduleIndex) => {
                               const alreadyApplied = applications.some((application) => (
                                 application.employee_id === result.employee_id && application.schedule_id === schedule.schedule_id
                               ))
                               return (
                                 <li key={schedule.schedule_id}>
-                                  <div><b>{formatDate(schedule.start_date)}</b><span>{schedule.duration_days}일 · {schedule.status}</span></div>
+                                  <div>
+                                    <b>{formatDate(schedule.start_date)}</b>
+                                    <span>{schedule.duration_days}일 · {schedule.status}{scheduleIndex === 0 && schedules.length > 1 && <em className="soonest-tag">가장 빠른 일정</em>}</span>
+                                  </div>
                                   <button type="button" className="apply-button" disabled={alreadyApplied} onClick={() => applyForSchedule(schedule)}>
                                     {alreadyApplied ? '신청 완료' : '모의 신청'}
                                   </button>
