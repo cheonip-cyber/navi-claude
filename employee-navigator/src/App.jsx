@@ -62,6 +62,7 @@ function App() {
   const [employeeId, setEmployeeId] = useState('')
   const [result, setResult] = useState(null)
   const [message, setMessage] = useState('')
+  const [activePage, setActivePage] = useState('search')
   const [applications, setApplications] = useState(getStoredApplications)
   const [applicationMessage, setApplicationMessage] = useState('')
 
@@ -72,6 +73,7 @@ function App() {
     if (!normalizedId) {
       setResult(null)
       setMessage('사번을 입력해 주세요.')
+      setActivePage('search')
       return
     }
 
@@ -79,12 +81,14 @@ function App() {
     if (!employee) {
       setResult(null)
       setMessage('입력한 사번의 직원 정보를 찾을 수 없습니다.')
+      setActivePage('search')
       return
     }
 
     setResult(employee)
     setMessage('')
     setApplicationMessage('')
+    setActivePage('profile')
   }
 
   function applyForSchedule(schedule) {
@@ -165,13 +169,24 @@ function App() {
       .sort((first, second) => first.start_date.localeCompare(second.start_date))
     : []
 
+  const stageLabel = activePage === 'profile'
+    ? 'STEP 02 · 교육생 정보'
+    : activePage === 'learning'
+      ? 'STEP 03 · 교육 준비 현황'
+      : 'STEP 01 · 직원 정보 조회'
+
   return (
     <main className="app-shell">
       <header className="topbar">
-        <a className="brand" href="#top" aria-label="교육 네비게이터 홈"><span className="brand-mark" aria-hidden="true">N</span><span>교육 네비게이터</span></a>
-        <span className="stage-label">STEP 01 · 직원 정보 조회</span>
+        <button className="brand" type="button" onClick={() => setActivePage('search')} aria-label="교육 네비게이터 홈"><span className="brand-mark" aria-hidden="true">N</span><span>교육 네비게이터</span></button>
+        {result ? (
+          <nav className="page-nav" aria-label="교육 네비게이터 메뉴">
+            <button type="button" className={activePage === 'profile' ? 'active' : ''} onClick={() => setActivePage('profile')}>교육생 정보</button>
+            <button type="button" className={activePage === 'learning' ? 'active' : ''} onClick={() => setActivePage('learning')}>교육 준비</button>
+          </nav>
+        ) : <span className="stage-label">{stageLabel}</span>}
       </header>
-      <section className="hero" id="top" aria-labelledby="page-title">
+      {activePage === 'search' && <section className="hero" id="top" aria-labelledby="page-title">
         <p className="eyebrow">MY LEARNING PATH</p>
         <h1 id="page-title">나의 교육 여정을<br />찾아보세요.</h1>
         <p className="hero-description">사번을 입력하면 현재 소속과 직무, 레벨을 확인할 수 있습니다.</p>
@@ -184,10 +199,10 @@ function App() {
           <p className="input-help">실습 데이터에 등록된 사번을 입력해 주세요.</p>
           {message && <p className="search-message" id="search-message" role="alert">{message}</p>}
         </form>
-      </section>
-      {result ? (
-        <section className="result-section" aria-live="polite" aria-labelledby="result-title">
-          <div className="result-heading"><p className="eyebrow">EMPLOYEE PROFILE</p><h2 id="result-title"><strong>{result.name}</strong>님의 현재 정보</h2></div>
+      </section>}
+      {result && activePage === 'profile' && (
+        <section className="result-section profile-page" aria-live="polite" aria-labelledby="result-title">
+          <div className="profile-page-intro"><div><p className="eyebrow">LEARNER PROFILE</p><h1 id="result-title"><strong>{result.name}</strong>님의<br />교육생 정보</h1><p>현재 역할과 다음 성장 목표를 확인하세요.</p></div><span>{result.employee_id}</span></div>
           <article className="profile-card">
             <div className="profile-top"><div className="avatar" aria-hidden="true">{result.name.slice(-1)}</div><div><p className="employee-name">{result.name}</p><p className="employee-id">{result.employee_id}</p></div><div className="level-pill">{result.current_level}</div></div>
             <dl className="info-grid">
@@ -202,6 +217,17 @@ function App() {
             <strong>{nextLevelByCurrentLevel[result.current_level]}</strong>
             <span>{result.current_level === 'LV1' ? '특급 엔지니어는 명칭만 표시하며, 연결된 JQC나 교육 과정은 없습니다.' : `${result.current_level} 다음 단계로 준비할 레벨입니다.`}</span>
           </section>
+          <section className="profile-summary" aria-label="교육 준비 요약">
+            <div><span>현재 직무</span><strong>{result.job_name}</strong></div>
+            <div><span>목표 JQC</span><strong>{result.current_level === 'LV1' ? '해당 없음' : `${targetJqcs.length}개`}</strong></div>
+            <div><span>추천 교육</span><strong>{result.current_level === 'LV1' ? '해당 없음' : `${recommendedCourses.length}개`}</strong></div>
+          </section>
+          <button className="view-learning-button" type="button" onClick={() => setActivePage('learning')}>교육 준비 현황 보기 <span aria-hidden="true">→</span></button>
+        </section>
+      )}
+      {result && activePage === 'learning' && (
+        <section className="result-section learning-page" aria-live="polite" aria-labelledby="learning-title">
+          <div className="learning-page-intro"><div><p className="eyebrow">LEARNING READINESS</p><h2 id="learning-title"><strong>{result.name}</strong>님의 교육 준비 현황</h2><p>{result.job_name} · 현재 {result.current_level} · 다음 목표 {targetLevel}</p></div><button type="button" onClick={() => setActivePage('profile')}>교육생 정보 보기</button></div>
           {result.current_level !== 'LV1' && (
             <section className="jqc-section" aria-labelledby="jqc-title">
               <div className="jqc-heading">
@@ -303,7 +329,8 @@ function App() {
             </section>
           )}
         </section>
-      ) : (
+      )}
+      {!result && activePage === 'search' && (
         <section className="empty-section" aria-label="조회 안내"><div className="compass" aria-hidden="true">✦</div><p>사번을 조회하면 이곳에 직원 정보가 표시됩니다.</p></section>
       )}
       <footer>교육 네비게이터 · 실습용 데이터 기반 서비스</footer>

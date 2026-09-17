@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>교육 네비게이터 개발 매뉴얼</title>
+  <style>
+    :root { --ink:#18323b; --muted:#62767c; --line:#d8e7e3; --mint:#e7f4ef; --deep:#17685c; --accent:#f0b54b; --surface:#f7faf9; --white:#fff; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-width:320px; color:var(--ink); background:#eaf2f0; font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif; }
+    .deck { width:min(1180px, calc(100% - 32px)); margin:0 auto; min-height:100vh; display:grid; grid-template-rows:auto 1fr auto; padding:22px 0; }
+    .deck-header { display:flex; align-items:center; justify-content:space-between; padding:0 4px 18px; color:var(--muted); font-size:13px; }
+    .brand { display:flex; align-items:center; gap:9px; color:var(--deep); font-weight:800; }
+    .brand-mark { display:grid; place-items:center; width:28px; height:28px; border-radius:8px 8px 8px 2px; color:#fff; background:var(--deep); font-size:14px; }
+    .slide { display:none; min-height:650px; padding:clamp(28px,5vw,68px); border:1px solid var(--line); border-radius:28px; background:var(--white); box-shadow:0 22px 55px rgba(42,76,68,.12); animation:enter .28s ease; }
+    .slide.active { display:block; }
+    @keyframes enter { from { opacity:.15; transform:translateY(10px); } to { opacity:1; transform:none; } }
+    .slide-grid { height:100%; display:grid; grid-template-columns:1.08fr .92fr; gap:clamp(30px,5vw,70px); align-items:center; }
+    .eyebrow { margin:0 0 14px; color:var(--deep); font-size:12px; font-weight:800; letter-spacing:1.4px; }
+    h1,h2,h3,p { margin-top:0; } h1 { max-width:720px; margin-bottom:22px; font-size:clamp(40px,6vw,76px); line-height:1.12; letter-spacing:-3px; } h2 { margin-bottom:15px; font-size:clamp(29px,4vw,48px); line-height:1.2; letter-spacing:-2px; } h3 { margin:0 0 8px; font-size:17px; }
+    .lead { max-width:680px; color:var(--muted); font-size:18px; line-height:1.8; }
+    .cover-card,.note-card,.flow-card { border:1px solid var(--line); border-radius:20px; background:var(--surface); padding:25px; }
+    .cover-card { background:linear-gradient(145deg,#effaf6,#fbfffd); }
+    .cover-card strong { display:block; margin:4px 0 14px; font-size:31px; letter-spacing:-1.5px; }.cover-card p { margin-bottom:0; color:var(--muted); line-height:1.7; }
+    .step-list { display:grid; gap:11px; margin:24px 0 0; padding:0; list-style:none; }.step-list li { display:flex; gap:12px; align-items:center; color:#38545a; font-size:14px; }.step-list b { display:grid; place-items:center; flex:0 0 26px; width:26px; height:26px; border-radius:50%; color:var(--deep); background:#dcefe9; font-size:11px; }
+    .prompt { margin:20px 0; padding:18px 20px; border-left:4px solid var(--accent); border-radius:0 12px 12px 0; background:#fff9eb; color:#554420; font-size:14px; line-height:1.75; white-space:pre-wrap; }
+    .prompt-label { display:block; margin-bottom:7px; color:#9a741e; font-size:11px; font-weight:800; letter-spacing:1px; }
+    .two-col { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:20px; }.mini-card { padding:18px; border:1px solid var(--line); border-radius:15px; background:#fff; }.mini-card p { margin:0; color:var(--muted); font-size:13px; line-height:1.65; }.mini-card b { color:var(--deep); }
+    .data-flow { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:22px; }.node { padding:9px 11px; border-radius:8px; color:#195d53; background:var(--mint); font-family:Consolas,monospace; font-size:12px; font-weight:700; }.arrow { color:#8ba59e; font-weight:800; }
+    .code { margin:16px 0; padding:16px; overflow:auto; border-radius:12px; color:#d9f1eb; background:#183d3a; font:12px/1.65 Consolas,"Courier New",monospace; white-space:pre-wrap; }.code .comment { color:#8fb7ae; }.code .value { color:#f4c86a; }
+    .checklist { display:grid; gap:11px; margin:20px 0 0; padding:0; list-style:none; }.checklist li { padding-left:29px; position:relative; color:#496269; line-height:1.55; font-size:14px; }.checklist li::before { content:"✓"; position:absolute; left:0; top:0; display:grid; place-items:center; width:20px; height:20px; border-radius:50%; color:#fff; background:#35917f; font-size:12px; font-weight:800; }
+    .callout { margin-top:20px; padding:15px 17px; border-radius:12px; color:#365e58; background:#e7f4ef; font-size:13px; line-height:1.65; }.callout b { color:#17685c; }
+    .warning { background:#fff5df; color:#76571e; }.warning b { color:#9a741e; }
+    .timeline { display:grid; gap:0; margin-top:18px; }.timeline-item { display:grid; grid-template-columns:32px 1fr; gap:14px; padding-bottom:15px; }.timeline-item:last-child { padding-bottom:0; }.timeline-dot { position:relative; display:grid; place-items:center; width:28px; height:28px; border-radius:50%; color:#fff; background:var(--deep); font-size:11px; font-weight:800; }.timeline-item:not(:last-child) .timeline-dot::after { content:""; position:absolute; top:28px; width:2px; height:calc(100% + 2px); background:#cae1da; }.timeline-item p { margin:3px 0 0; color:var(--muted); font-size:13px; line-height:1.55; }.timeline-item strong { font-size:14px; }
+    .deck-footer { display:flex; justify-content:space-between; align-items:center; padding:18px 4px 0; }.controls { display:flex; gap:8px; }.controls button { min-width:94px; padding:10px 14px; border:1px solid var(--line); border-radius:10px; color:#34545a; background:#fff; font:inherit; font-size:13px; font-weight:700; cursor:pointer; }.controls button:hover:not(:disabled) { border-color:#7ab6aa; background:#edf7f4; }.controls button:disabled { opacity:.4; cursor:not-allowed; }.counter { color:var(--muted); font-size:13px; }
+    .slide-map { display:flex; flex-wrap:wrap; gap:5px; justify-content:flex-end; }.slide-map button { width:16px; height:7px; padding:0; border:0; border-radius:99px; background:#c4d8d2; cursor:pointer; }.slide-map button.active { width:30px; background:var(--deep); }
+    @media (max-width:780px) { .deck { width:min(100% - 20px,720px); padding:10px 0; }.deck-header { padding:6px 5px 12px; }.slide { min-height:620px; padding:32px 24px; border-radius:19px; }.slide-grid { display:block; }.slide-grid > * + * { margin-top:28px; }.two-col { grid-template-columns:1fr; } h1 { letter-spacing:-2px; }.deck-footer { flex-wrap:wrap; gap:10px; }.slide-map { order:-1; width:100%; justify-content:flex-start; } }
+    @media print { body { background:#fff; }.deck { display:block; width:100%; }.deck-header,.deck-footer { display:none; }.slide { display:block; min-height:100vh; box-shadow:none; border:0; border-radius:0; break-after:page; page-break-after:always; }.slide:last-of-type { break-after:auto; page-break-after:auto; } }
+  </style>
+</head>
+<body>
+  <main class="deck" aria-label="교육 네비게이터 개발 매뉴얼 슬라이드">
+    <header class="deck-header"><div class="brand"><span class="brand-mark">N</span>교육 네비게이터 개발 매뉴얼</div><span>학습자용 · 단계별 재현 가이드</span></header>
+
+    <section class="slide active">
+      <div class="slide-grid">
+        <div><p class="eyebrow">DEVELOPMENT PLAYBOOK</p><h1>데이터에서<br>학습 경로까지</h1><p class="lead">직원 교육 네비게이터를 작은 기능 단위로 구현하며, 데이터 규칙을 지키고 검증하는 전체 개발 과정을 정리했습니다.</p><div class="prompt"><span class="prompt-label">사용자 프롬프트</span>학습자들에게 어떻게 개발을 하는지에 대해 매뉴얼을 제공하려고해.
+개발 순서를 반영해주고, 각 개발 단계에서 사용 된 프롬프트를 포함해서, 개발 프로세스를 정확히 파악할 수 있도록 파일로 정리해줘.</div></div>
+        <aside class="cover-card"><p class="eyebrow">이 매뉴얼에서 배우는 것</p><strong>작게 만들고,<br>데이터로 검증하기</strong><ul class="step-list"><li><b>01</b>프로젝트 규칙을 먼저 고정</li><li><b>02</b>JSON 구조를 확인한 뒤 화면 구현</li><li><b>03</b>ID 기반으로 JQC와 과정을 연결</li><li><b>04</b>계산 결과를 테스트하고 점검</li></ul></aside>
+      </div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">01 · PROJECT RULES</p><h2>가장 먼저, 데이터 사용 규칙을<br>프로젝트 지침으로 고정합니다.</h2><p class="lead">기능을 먼저 만들기보다 원본 데이터와 계산 규칙을 문서화해야 이후의 화면·추천 기능이 일관되게 동작합니다.</p>
+      <div class="prompt"><span class="prompt-label">사용자 프롬프트</span>지침파일을 확인해서, 해당 지침을 지속적으로 지킬 수 있도록 세팅해줘.</div>
+      <div class="two-col"><article class="mini-card"><h3>확인한 핵심 규칙</h3><p><b>원본 데이터는 읽기 전용</b>이며, 연결에는 이름이 아니라 ID를 사용합니다. 관계는 <code>employee_id → job_id → level → jqc_id → course_id</code> 순서로 추적합니다.</p></article><article class="mini-card"><h3>프로젝트에 남긴 결과</h3><p><b>AGENTS.md</b>에 레벨, 이수, JQC, 추천, 일정 규칙을 구조화합니다. 이후 개발 작업은 이 문서를 공통 기준으로 삼습니다.</p></article></div>
+      <div class="callout"><b>학습 포인트</b> · 요구사항을 개발자의 기억에만 의존하지 말고, 프로젝트 안의 지침 파일로 남겨 변경 작업마다 확인합니다.</div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">02 · DATA DISCOVERY</p><h2>JSON을 먼저 읽고,<br>실제 필드로 화면을 설계합니다.</h2>
+      <div class="prompt"><span class="prompt-label">사용자 프롬프트</span>json파일을 확인해주고, 직원 교육 네비게이터를 만들고 싶어.
+사번을 입력하면 직원의 소속, 직무, 현재 레벨을 보여주고,
+다음 단계에 필요한 JQC와 교육을 안내하는 웹앱이야.
+한 번에 모든 기능을 만들지 말고,
+우선 사번을 입력하고 직원 정보를 확인하는 화면부터 만들어줘.</div>
+      <div class="data-flow"><span class="node">employees</span><span class="arrow">→</span><span class="node">employee_id</span><span class="arrow">→</span><span class="node">job_id</span><span class="arrow">→</span><span class="node">current_level</span></div>
+      <div class="two-col"><article class="mini-card"><h3>확인한 직원 필드</h3><p><code>employee_id</code>, <code>department_name</code>, <code>part_name</code>, <code>job_id</code>, <code>job_name</code>, <code>current_level</code></p></article><article class="mini-card"><h3>데이터 규모 파악</h3><p>직원 15명, JQC 86개, 과정 288개, JQC-과정 매핑 343개를 확인했습니다. 이 수치를 먼저 보면 화면·성능 범위를 판단할 수 있습니다.</p></article></div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">03 · FIRST SCREEN</p><h2>첫 기능은 사번 조회와<br>직원 정보 표시만 구현합니다.</h2>
+      <div class="slide-grid"><div><div class="code"><span class="comment">// 입력값을 대문자 사번으로 정규화</span>
+const normalizedId = employeeId.trim().toUpperCase()
+const employee = employees.find(
+  ({ employee_id }) =&gt; employee_id === normalizedId
+)</div><ul class="checklist"><li>빈 값: “사번을 입력해 주세요.”</li><li>없는 사번: “직원 정보를 찾을 수 없습니다.”</li><li>일치하는 사번: 소속·파트·직무·현재 레벨 표시</li></ul></div><aside class="note-card"><h3>왜 한 번에 만들지 않을까요?</h3><p class="lead" style="font-size:15px">조회 기능이 맞는지 먼저 확인해야 다음 단계의 JQC·이수·추천 계산에 잘못된 직원 정보가 전달되는 일을 막을 수 있습니다.</p><div class="callout">검증 예시: <b>AI00009</b> 입력 시 교육생01, AI 전략기획부, AI 전략기획, LV3가 표시되는지 확인합니다.</div></aside></div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">04 · NEXT TARGET</p><h2>현재 레벨은 그대로,<br>다음 목표만 규칙으로 제안합니다.</h2>
+      <div class="prompt"><span class="prompt-label">사용자 프롬프트</span>현재 레벨 다음에 어떤 레벨을 준비해야 하는지 보여줘.
+현재 레벨은 데이터에 있는 값을 그대로 사용해줘.
+LV1의 다음 목표는 '특급 엔지니어'라고 표시하면 돼.
+관련 과정이나 JQC는 없어.</div>
+      <div class="code">const nextLevelByCurrentLevel = {
+  LV4: <span class="value">'LV3'</span>, LV3: <span class="value">'LV2'</span>,
+  LV2: <span class="value">'LV1'</span>, LV1: <span class="value">'특급 엔지니어'</span>,
+}</div>
+      <div class="two-col"><article class="mini-card"><h3>반드시 지킬 점</h3><p><b>current_level을 재계산하지 않습니다.</b> 교육 이력이나 준비도는 다음 목표를 위한 정보일 뿐 현재 레벨을 바꾸는 근거가 아닙니다.</p></article><article class="mini-card"><h3>LV1 예외</h3><p>특급 엔지니어는 목표 <b>명칭만</b> 표시합니다. JQC·교육·진행률을 임의로 생성하지 않습니다.</p></article></div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">05 · TARGET JQC</p><h2>직무와 목표 레벨이 모두 맞는<br>JQC만 연결합니다.</h2>
+      <div class="prompt"><span class="prompt-label">사용자 프롬프트</span>다음으로 직원의 직무와 다음 목표에 맞는 JQC를 보여줘.
+데이터가 어떻게 연결되는지 먼저 확인하고 구현해줘.
+관련 JQC가 없는 경우에는 임의로 만들지 말고
+없다는 안내를 보여줘.</div>
+      <div class="data-flow"><span class="node">employees.job_id</span><span class="arrow">→</span><span class="node">job_jqc_map</span><span class="arrow">→</span><span class="node">jqc_id</span><span class="arrow">→</span><span class="node">jqcs</span></div>
+      <div class="code">sourceData.job_jqc_map
+  .filter(mapping =&gt; mapping.job_id === result.job_id
+    &amp;&amp; mapping.level === targetLevel)
+  .map(mapping =&gt; jqcs.find(jqc =&gt; jqc.jqc_id === mapping.jqc_id))</div>
+      <div class="callout"><b>빈 데이터 처리</b> · 연결 결과가 없으면 “현재 직무와 다음 목표 레벨에 연결된 JQC 정보가 없습니다.”를 표시합니다. 데이터에 없는 JQC는 만들지 않습니다.</div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">06 · COMPLETION &amp; READINESS</p><h2>교육 이력을 필수 과정과 비교해<br>JQC 준비도를 계산합니다.</h2>
+      <div class="prompt"><span class="prompt-label">사용자 프롬프트</span>이제 직원의 교육 이수내역을 불러와서,
+각 JQC를 준비하기 위해 교육을 얼마나 이수했는지 보여줘.
+수료와 우수는 이수한 것으로 보고,
+재교육은 아직 이수하지 않은 것으로 처리해줘.
+진행 정도를 바 형태로 시각화 해줘.</div>
+      <div class="data-flow"><span class="node">employee_courses</span><span class="arrow">→</span><span class="node">completed course_id</span><span class="arrow">→</span><span class="node">jqc_course_map</span><span class="arrow">→</span><span class="node">준비도</span></div>
+      <div class="two-col"><article class="mini-card"><h3>이수 판정</h3><p><b>수료·우수</b> 결과의 <code>course_id</code>만 완료 집합에 넣습니다. <b>재교육</b>은 완료 집합에 넣지 않습니다.</p></article><article class="mini-card"><h3>계산식</h3><p><b>이수한 연결 교육의 고유 과정 수 ÷ 전체 연결 교육의 고유 과정 수 × 100</b>. 연결 교육이 0건이면 0%가 아니라 교육정보 없음입니다.</p></article></div>
+      <div class="callout"><b>상태 문구</b> · 0% 학습 시작 전 · 1~99% 학습 진행 중 · 100% JQC 평가 준비 완료. 100%는 공식 인증 완료가 아닙니다.</div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">07 · COURSE RECOMMENDATION</p><h2>준비가 필요한 JQC에서<br>미이수 필수 과정만 추천합니다.</h2>
+      <div class="prompt"><span class="prompt-label">사용자 프롬프트</span>아직 이수하지 않은 교육을 추천하는 기능을 추가해서 표시해줘.
+왜 이 교육이 필요한지 알 수 있도록
+관련 JQC도 함께 보여줘.
+같은 과정이 여러 번 나오면 한 번만 보여줘.</div>
+      <div class="slide-grid"><div><div class="code"><span class="comment">// course_id를 키로 사용해 중복 통합</span>
+const courseMap = new Map()
+if (!courseMap.has(courseId)) {
+  courseMap.set(courseId, { course, jqcs: [] })
+}
+courseMap.get(courseId).jqcs.push(jqc)</div><p class="lead" style="font-size:15px">추천 화면에는 과정명, 과정 ID, 목표 레벨, 관련 JQC를 함께 표시합니다. 따라서 학습자는 “무엇을”과 “왜”를 동시에 이해할 수 있습니다.</p></div><aside class="note-card"><h3>추천 대상 조건</h3><ul class="checklist"><li>현재 직원의 목표 JQC에 연결됨</li><li><code>REQUIRED</code> 과정임</li><li>현재 이수 상태에 없음</li><li>과정 ID가 중복되면 한 카드로 통합</li></ul></aside></div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">08 · QUALITY CHECK</p><h2>화면을 만든 뒤에는<br>데이터와 빌드를 같이 점검합니다.</h2>
+      <div class="prompt"><span class="prompt-label">사용자 프롬프트</span>지금까지 개발한 코드 점검해 봐.</div>
+      <div class="two-col"><article class="mini-card"><h3>자동 확인</h3><div class="code" style="margin:12px 0 0">npm run lint
+npm run build</div><p>문법·정적 오류를 확인하고, 실제 배포용 번들이 생성되는지 검증합니다.</p></article><article class="mini-card"><h3>데이터 무결성 확인</h3><p><code>job_jqc_map.jqc_id</code>가 실제 JQC에 존재하는지, <code>jqc_course_map.course_id</code>가 실제 과정에 존재하는지 확인합니다.</p></article></div>
+      <div class="callout"><b>코드 점검 결과</b> · 린트와 프로덕션 빌드 통과, JQC·과정 참조 누락 0건을 확인했습니다. 이후 데이터가 커질 때는 ID별 인덱스를 만들어 반복 순회를 줄이는 개선을 권장합니다.</div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">09 · VERSION CONTROL</p><h2>작동하는 시점마다 커밋하고,<br>저장소에는 필요한 파일만 올립니다.</h2>
+      <div class="prompt"><span class="prompt-label">사용자 프롬프트</span>'navi-2'라는 이름으로 깃허브에 업로드해줘.</div>
+      <div class="timeline"><div class="timeline-item"><span class="timeline-dot">1</span><div><strong>저장소 범위 결정</strong><p>웹앱 소스, JSON 실습 데이터, 지침 파일을 포함하고 불필요한 엑셀 원본·빌드 산출물은 제외합니다.</p></div></div><div class="timeline-item"><span class="timeline-dot">2</span><div><strong>비공개 저장소 생성</strong><p>저장소 공개 범위를 확인한 뒤 GitHub에 <code>navi-2</code>를 비공개로 만듭니다.</p></div></div><div class="timeline-item"><span class="timeline-dot">3</span><div><strong>의미 있는 단위로 커밋</strong><p>초기 화면과 JQC 기능을 별도 커밋으로 남겨 변경 이력을 이해하기 쉽게 만듭니다.</p></div></div></div>
+      <div class="callout warning"><b>주의</b> · 코드가 수정된 뒤에는 <code>git status</code>로 미커밋 변경을 반드시 확인합니다. 로컬에서 정상이어도 푸시하지 않으면 GitHub 버전에는 반영되지 않습니다.</div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-grid"><div><p class="eyebrow">10 · REPRODUCTION CHECKLIST</p><h2>학습자가 따라 할<br>권장 개발 순서</h2><ol class="checklist"><li>지침 파일을 읽고 프로젝트 규칙으로 정리한다.</li><li>JSON 구조·ID 관계·예시 직원 데이터를 확인한다.</li><li>사번 조회와 직원 정보 표시부터 구현·검증한다.</li><li>다음 목표 레벨, 목표 JQC를 순차적으로 추가한다.</li><li>교육 이력·준비도·미이수 추천을 구현한다.</li><li>빈 결과와 LV1 예외를 화면으로 명확히 처리한다.</li><li>린트·빌드·데이터 참조를 검증하고 커밋한다.</li></ol></div><aside class="cover-card"><p class="eyebrow">핵심 원칙</p><strong>데이터를 추측하지 말고,<br>작게 검증하며 연결합니다.</strong><p>이 교육 네비게이터의 모든 화면은 실제 데이터의 ID 관계에서 출발합니다. 기능을 한 단계씩 나누면 오류 원인을 빠르게 찾고 안전하게 확장할 수 있습니다.</p><div class="callout">다음 확장 과제: 이수 상태를 <code>localStorage</code>에 저장하고, 가까운 일정만 연결해 모의 신청 기능을 완성합니다.</div></aside></div>
+    </section>
+
+    <footer class="deck-footer"><span class="counter" id="counter" aria-live="polite">1 / 11</span><nav class="slide-map" id="slide-map" aria-label="슬라이드 선택"></nav><div class="controls"><button id="prev" type="button">← 이전</button><button id="next" type="button">다음 →</button></div></footer>
+  </main>
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const previousButton = document.getElementById('prev');
+    const nextButton = document.getElementById('next');
+    const counter = document.getElementById('counter');
+    const slideMap = document.getElementById('slide-map');
+    let current = 0;
+    slides.forEach((slide, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.setAttribute('aria-label', `${index + 1}번 슬라이드`);
+      button.addEventListener('click', () => showSlide(index));
+      slideMap.appendChild(button);
+    });
+    const mapButtons = Array.from(slideMap.querySelectorAll('button'));
+    function showSlide(index) {
+      current = Math.max(0, Math.min(index, slides.length - 1));
+      slides.forEach((slide, slideIndex) => slide.classList.toggle('active', slideIndex === current));
+      mapButtons.forEach((button, buttonIndex) => button.classList.toggle('active', buttonIndex === current));
+      previousButton.disabled = current === 0;
+      nextButton.disabled = current === slides.length - 1;
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    previousButton.addEventListener('click', () => showSlide(current - 1));
+    nextButton.addEventListener('click', () => showSlide(current + 1));
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight' || event.key === 'PageDown') showSlide(current + 1);
+      if (event.key === 'ArrowLeft' || event.key === 'PageUp') showSlide(current - 1);
+    });
+    showSlide(0);
+  </script>
+</body>
+</html>
