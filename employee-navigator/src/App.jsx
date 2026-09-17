@@ -14,13 +14,6 @@ function App() {
   const [employeeId, setEmployeeId] = useState('')
   const [result, setResult] = useState(null)
   const [message, setMessage] = useState('')
-  const targetLevel = result ? nextLevelByCurrentLevel[result.current_level] : null
-  const targetJqcs = result && result.current_level !== 'LV1'
-    ? sourceData.job_jqc_map
-      .filter((mapping) => mapping.job_id === result.job_id && mapping.level === targetLevel)
-      .map((mapping) => sourceData.jqcs.find((jqc) => jqc.jqc_id === mapping.jqc_id))
-      .filter(Boolean)
-    : []
 
   function handleSubmit(event) {
     event.preventDefault()
@@ -78,32 +71,9 @@ function App() {
           <section className="next-level-card" aria-label="다음 목표 레벨">
             <p>다음 목표</p>
             <strong>{nextLevelByCurrentLevel[result.current_level]}</strong>
-            <span>{result.current_level === 'LV1' ? '최종 경력 목표 명칭입니다.' : `${result.current_level} 다음 단계로 준비할 레벨입니다.`}</span>
+            <span>{result.current_level === 'LV1' ? '특급 엔지니어는 명칭만 표시하며, 연결된 JQC나 교육 과정은 없습니다.' : `${result.current_level} 다음 단계로 준비할 레벨입니다.`}</span>
           </section>
-          <section className="jqc-section" aria-labelledby="jqc-title">
-            <div className="jqc-heading">
-              <div>
-                <p className="eyebrow">TARGET JQC</p>
-                <h3 id="jqc-title">{targetLevel} 목표를 위한 JQC</h3>
-              </div>
-              <span>{result.job_name} · {result.job_id}</span>
-            </div>
-            {result.current_level === 'LV1' ? (
-              <p className="no-jqc-message">특급 엔지니어는 명칭만 표시하며, 연결된 JQC나 교육 과정은 없습니다.</p>
-            ) : targetJqcs.length > 0 ? (
-              <ul className="jqc-list">
-                {targetJqcs.map((jqc) => (
-                  <li key={jqc.jqc_id}>
-                    <span className="jqc-code">{jqc.jqc_id}</span>
-                    <strong>{jqc.jqc_name}</strong>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="no-jqc-message">현재 직무와 다음 목표 레벨에 연결된 JQC 정보가 없습니다.</p>
-            )}
-          </section>
-          {result.current_level !== 'LV1' && <p className="next-step-note">각 JQC에 필요한 교육 과정은 다음 단계에서 안내합니다.</p>}
+          {result.current_level !== 'LV1' && <p className="next-step-note">이 목표에 필요한 JQC와 교육 안내는 다음 단계에서 제공될 예정입니다.</p>}
         </section>
       ) : (
         <section className="empty-section" aria-label="조회 안내"><div className="compass" aria-hidden="true">✦</div><p>사번을 조회하면 이곳에 직원 정보가 표시됩니다.</p></section>
