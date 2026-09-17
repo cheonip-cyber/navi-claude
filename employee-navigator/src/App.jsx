@@ -202,7 +202,7 @@ function App() {
       </section>}
       {result && activePage === 'profile' && (
         <section className="result-section profile-page" aria-live="polite" aria-labelledby="result-title">
-          <div className="profile-page-intro"><div><p className="eyebrow">LEARNER PROFILE</p><h1 id="result-title"><strong>{result.name}</strong>님의<br />교육생 정보</h1><p>현재 역할과 다음 성장 목표를 확인하세요.</p></div><span>{result.employee_id}</span></div>
+          <div className="profile-page-intro"><div><p className="eyebrow">STEP 1 · 현재 상태</p><h1 id="result-title"><strong>{result.name}</strong>님의<br />교육생 정보</h1><p>현재 역할과 다음 성장 목표를 확인하세요.</p></div><span>{result.employee_id}</span></div>
           <article className="profile-card">
             <div className="profile-top"><div className="avatar" aria-hidden="true">{result.name.slice(-1)}</div><div><p className="employee-name">{result.name}</p><p className="employee-id">{result.employee_id}</p></div><div className="level-pill">{result.current_level}</div></div>
             <dl className="info-grid">
@@ -213,7 +213,7 @@ function App() {
             </dl>
           </article>
           <section className="next-level-card" aria-label="다음 목표 레벨">
-            <p>다음 목표</p>
+            <p className="step-eyebrow">STEP 2 · 다음 목표</p>
             <strong>{nextLevelByCurrentLevel[result.current_level]}</strong>
             <span>{result.current_level === 'LV1' ? '특급 엔지니어는 명칭만 표시하며, 연결된 JQC나 교육 과정은 없습니다.' : `${result.current_level} 다음 단계로 준비할 레벨입니다.`}</span>
           </section>
@@ -232,36 +232,47 @@ function App() {
             <section className="jqc-section" aria-labelledby="jqc-title">
               <div className="jqc-heading">
                 <div>
-                  <p className="eyebrow">TARGET JQC</p>
-                  <h3 id="jqc-title">{targetLevel} 목표를 위한 JQC</h3>
+                  <p className="eyebrow">STEP 3 · 부족한 JQC</p>
+                  <h3 id="jqc-title">{targetLevel} 달성을 위해 준비가 필요한 JQC</h3>
                 </div>
                 <span>{result.job_name} · {result.job_id}</span>
               </div>
               {targetJqcs.length > 0 ? (
-                <ul className="jqc-list">
-                  {targetJqcs.map((jqc) => {
-                    const readiness = getReadiness(result.employee_id, jqc.jqc_id)
-                    return (
-                      <li key={jqc.jqc_id}>
-                        <span className="jqc-code">{jqc.jqc_id}</span>
-                        <strong>{jqc.jqc_name}</strong>
-                        {readiness.percentage === null ? (
-                          <p className="readiness-empty">교육정보 없음</p>
-                        ) : (
-                          <div className="readiness">
-                            <div className="readiness-bar" role="progressbar" aria-valuenow={readiness.percentage} aria-valuemin={0} aria-valuemax={100}>
-                              <div className="readiness-bar-fill" style={{ width: `${readiness.percentage}%` }} />
-                            </div>
-                            <div className="readiness-meta">
-                              <span>{readiness.completedCount}/{readiness.totalCount} 과정 이수 · {readiness.percentage}%</span>
-                              <span className="readiness-status">{getReadinessStatus(readiness.percentage)}</span>
-                            </div>
+                <>
+                  <p className="section-guide">준비도가 100%보다 낮은 JQC가 있으면 아래에서 필요한 교육을 확인하세요.</p>
+                  <ul className="jqc-list">
+                    {targetJqcs.map((jqc) => {
+                      const readiness = getReadiness(result.employee_id, jqc.jqc_id)
+                      const isReady = readiness.percentage === 100
+                      return (
+                        <li key={jqc.jqc_id} className={isReady ? 'jqc-ready' : 'jqc-pending'}>
+                          <div className="jqc-item-heading">
+                            <span className="jqc-code">{jqc.jqc_id}</span>
+                            {readiness.percentage !== null && (
+                              <span className={isReady ? 'jqc-badge jqc-badge-ready' : 'jqc-badge jqc-badge-pending'}>
+                                {isReady ? '준비 완료' : '부족'}
+                              </span>
+                            )}
                           </div>
-                        )}
-                      </li>
-                    )
-                  })}
-                </ul>
+                          <strong>{jqc.jqc_name}</strong>
+                          {readiness.percentage === null ? (
+                            <p className="readiness-empty">교육정보 없음</p>
+                          ) : (
+                            <div className="readiness">
+                              <div className="readiness-bar" role="progressbar" aria-valuenow={readiness.percentage} aria-valuemin={0} aria-valuemax={100}>
+                                <div className="readiness-bar-fill" style={{ width: `${readiness.percentage}%` }} />
+                              </div>
+                              <div className="readiness-meta">
+                                <span>{readiness.completedCount}/{readiness.totalCount} 과정 이수 · {readiness.percentage}%</span>
+                                <span className="readiness-status">{getReadinessStatus(readiness.percentage)}</span>
+                              </div>
+                            </div>
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </>
               ) : (
                 <p className="no-jqc-message">현재 직무와 다음 목표 레벨에 연결된 JQC 정보가 없습니다.</p>
               )}
@@ -271,8 +282,8 @@ function App() {
             <section className="recommend-section" aria-labelledby="recommend-title">
               <div className="jqc-heading">
                 <div>
-                  <p className="eyebrow">RECOMMENDED COURSES</p>
-                  <h3 id="recommend-title">추천 교육</h3>
+                  <p className="eyebrow">STEP 4 · 필요한 교육</p>
+                  <h3 id="recommend-title">부족한 JQC를 채우기 위한 추천 교육</h3>
                 </div>
               </div>
               {recommendedCoursesWithSchedules.length > 0 ? (
